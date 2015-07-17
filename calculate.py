@@ -1,7 +1,7 @@
 
 
 # Token types
-INTEGER,PLUS,EOF = 'INTEGER','PLUS','EOF'
+INTEGER,OPER,EOF = 'INTEGER','OPER','EOF'
 class Token(object):
 	def __init__(self,type,value):
 		self.type = type
@@ -14,23 +14,39 @@ class Token(object):
 		return self.__str__()
 
 class Interpreter(object):
+	def deleteBlank(self,text):
+		ans = ""
+		for ch in text:
+			if(ch!=' '):
+				ans += ch
+		return ans
 	def __init__(self,text):
-		self.text=text
+		self.text=self.deleteBlank(text)
 		self.pos =0;
 		self.current_token = None
 	def error(self):
 		raise Exception('Error parsing input')
 	def get_next_token(self):
 		text = self.text
-		if self.pos > len(text)-1:
+		textLen = len(text)
+		if self.pos > textLen-1:
 			return Token(EOF,None)
 		current_char = text[self.pos]
-		if current_char.isdigit():
-			token = Token(INTEGER,int(current_char))
+		mark = False
+		number = ""
+		while current_char.isdigit():
+			mark = True
+			number += current_char
 			self.pos += 1
+			if self.pos < textLen:
+				current_char = text[self.pos]
+			else:
+				break;
+		if mark == True:
+			token = Token(INTEGER,int(number))
 			return token
-		if current_char =='+':
-			token = Token(PLUS,current_char)
+		if current_char =='+' or current_char=='-':
+			token = Token(OPER,current_char)
 			self.pos += 1
 			return token
 		self.error()
@@ -45,13 +61,17 @@ class Interpreter(object):
 		self.eat(INTEGER)
 		
 		op = self.current_token
-		self.eat(PLUS)
+		self.eat(OPER)
 
 		right = self.current_token
 		self.eat(INTEGER)
-
-		result = left.value + right.value
-		return result
+		oper = op.value
+		if oper=='+':
+			result = left.value + right.value
+			return result
+		elif oper=="-":
+			result = left.value - right.value
+			return result
 	
 def main():
 	while True:
